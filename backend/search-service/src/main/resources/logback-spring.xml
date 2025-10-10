@@ -1,0 +1,19 @@
+<configuration>
+  <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+      <customFields>{"app":"search-service"}</customFields>
+      <fieldNames>
+        <timestamp>time</timestamp>
+        <level>level</level>
+        <logger>logger</logger>
+        <thread>thread</thread>
+        <message>msg</message>
+      </fieldNames>
+      <includeMdcKeyName>correlationId</includeMdcKeyName>
+    </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="JSON"/>
+  </root>
+</configuration>

@@ -1,0 +1,44 @@
+# ===========================
+# Default settings (shared)
+# ===========================
+server:
+  port: 8080
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: always      # so you can see the DB check
+      probes:
+        enabled: true
+
+---
+
+# ===========================
+# DEV profile (local Docker DB)
+# ===========================
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/productsdb
+    username: ecommerce
+    password: secret
+

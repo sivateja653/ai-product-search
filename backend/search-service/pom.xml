@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.5.5</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.aiproductsearch</groupId>
+	<artifactId>search-service</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>search-service</name>
+	<description>Project for AI powered product search tool</description>
+	<url/>
+	<licenses>
+		<license/>
+	</licenses>
+	<developers>
+		<developer/>
+	</developers>
+	<scm>
+		<connection/>
+		<developerConnection/>
+		<tag/>
+		<url/>
+	</scm>
+	<properties>
+		<java.version>21</java.version>
+	</properties>
+	<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+      <version>10.17.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-postgresql</artifactId>
+      <version>10.17.0</version>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
+		  <groupId>io.micrometer</groupId>
+		  <artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+		<dependency>
+		  <groupId>org.apache.commons</groupId>
+		  <artifactId>commons-csv</artifactId>
+		  <version>1.11.0</version>
+		</dependency>
+		<dependency>
+		  <groupId>com.h2database</groupId>
+		  <artifactId>h2</artifactId>
+		  <scope>test</scope>
+		</dependency>
+		<dependency>
+		  <groupId>net.logstash.logback</groupId>
+		  <artifactId>logstash-logback-encoder</artifactId>
+		  <version>7.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+		  <groupId>org.springframework.boot</groupId>
+		  <artifactId>spring-boot-starter-webflux</artifactId> <!-- WebClient -->
+		</dependency>
+		<dependency>                                   <!-- 1.1: add Spring Kafka -->
+		  <groupId>org.springframework.kafka</groupId>
+		  <artifactId>spring-kafka</artifactId>
+		</dependency>
+		<dependency>
+		  <groupId>com.fasterxml.jackson.core</groupId>
+		  <artifactId>jackson-databind</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.7.3</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.32</version>
+  			<scope>provided</scope>
+		</dependency>
+		<dependency>
+		  <groupId>com.github.spotbugs</groupId>
+		  <artifactId>spotbugs-annotations</artifactId>
+		  <version>4.8.6</version>
+		  <scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- 7d-1: Resilience4j integration for circuit breakers in Boot 3 -->
+		<dependency>
+		  <groupId>io.github.resilience4j</groupId>
+		  <artifactId>resilience4j-spring-boot3</artifactId>
+		  <version>2.2.0</version>
+		</dependency>
+		<!-- Reactor support (WebClient) -->
+		<dependency>
+		  <groupId>io.github.resilience4j</groupId>
+		  <artifactId>resilience4j-reactor</artifactId>
+		  <version>2.2.0</version>
+		</dependency>
+		<!-- Micrometer binding (optional but useful for /actuator/metrics) -->
+		<dependency>
+		  <groupId>io.github.resilience4j</groupId>
+		  <artifactId>resilience4j-micrometer</artifactId>
+		  <version>2.2.0</version>
+		</dependency>
+		<!-- Observability -->
+		<dependency>
+		  <groupId>io.micrometer</groupId>
+		  <artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+		<!-- Flyway for migrations -->
+		<dependency>
+		  <groupId>org.flywaydb</groupId>
+		  <artifactId>flyway-core</artifactId><!--$NO-MVN-MAN-VER$-->
+		</dependency>
+		<dependency>
+		  <groupId>org.flywaydb</groupId>
+		  <artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
+		<!-- MapStruct (optional DTOs) -->
+		<dependency>
+		  <groupId>org.mapstruct</groupId>
+		  <artifactId>mapstruct</artifactId>
+		  <version>1.5.5.Final</version>
+		</dependency>
+		<dependency>
+		  <groupId>org.mapstruct</groupId>
+		  <artifactId>mapstruct-processor</artifactId>
+		  <version>1.5.5.Final</version>
+		  <scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+		      <groupId>org.apache.maven.plugins</groupId>
+		      <artifactId>maven-surefire-plugin</artifactId>
+		      <version>3.2.5</version>
+		      <configuration>
+		        <systemPropertyVariables>
+		          <spring.profiles.active>test</spring.profiles.active>
+		        </systemPropertyVariables>
+		      </configuration>
+    		</plugin>
+    		<plugin>
+		  <groupId>com.diffplug.spotless</groupId>
+		  <artifactId>spotless-maven-plugin</artifactId>
+		  <version>2.43.0</version>
+		  <configuration>
+		    <java>
+		      <googleJavaFormat>
+		        <version>1.17.0</version>
+		      </googleJavaFormat>
+		      <removeUnusedImports/>
+		      <importOrder/>
+		      <formatAnnotations/>
+		    </java>
+		  </configuration>
+		  <executions>
+		    <execution>
+		      <phase>process-sources</phase>
+		      <goals><goal>apply</goal></goals>
+		    </execution>
+		  </executions>
+		</plugin>
+		<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-checkstyle-plugin</artifactId>
+  <version>3.6.0</version>
+  <executions>
+    <execution>
+      <id>checkstyle-verify</id>
+      <phase>verify</phase>
+      <goals><goal>check</goal></goals>
+    </execution>
+    <execution>
+      <id>checkstyle-report</id>
+      <phase>none</phase>
+      <goals><goal>checkstyle</goal></goals>
+    </execution>
+  </executions>
+  <configuration>
+    <configLocation>${project.basedir}/config/checkstyle/checkstyle.xml</configLocation>
+    <suppressionsLocation>${project.basedir}/config/checkstyle/suppressions.xml</suppressionsLocation>
+    <includeTestSourceDirectory>false</includeTestSourceDirectory>
+    <sourceDirectories>
+      <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+    </sourceDirectories>
+    <failOnViolation>true</failOnViolation>
+    <consoleOutput>true</consoleOutput>
+  </configuration>
+</plugin>
+		</plugins>
+	</build>
+	<profiles>
+  <!-- Local dev profile: run tests + coverage + style + bugs + owasp -->
+  <profile>
+    <id>dev-quality</id>
+    <build>
+      <plugins>
+        <!-- JaCoCo -->
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>0.8.11</version>
+          <executions>
+            <execution><goals><goal>prepare-agent</goal></goals></execution>
+            <execution><id>report</id><phase>verify</phase><goals><goal>report</goal></goals></execution>
+          </executions>
+        </plugin>
+
+        <!-- SpotBugs -->
+        <plugin>
+          <groupId>com.github.spotbugs</groupId>
+          <artifactId>spotbugs-maven-plugin</artifactId>
+          <version>4.8.6.2</version>
+          <executions>
+            <execution><goals><goal>check</goal></goals></execution>
+          </executions>
+        </plugin>
+
+        <!-- Checkstyle (default rules) -->
+		
+
+        <!-- OWASP Dependency-Check -->
+        <plugin>
+          <groupId>org.owasp</groupId>
+          <artifactId>dependency-check-maven</artifactId>
+          <version>10.0.4</version>
+          <executions>
+            <execution><goals><goal>check</goal></goals></execution>
+          </executions>
+          <configuration>
+            <failBuildOnCVSS>7.0</failBuildOnCVSS>
+          </configuration>
+        </plugin>
+      </plugins>
+    </build>
+  </profile>
+
+  <!-- CI profile: identical checks, but you can tweak (e.g., stricter CVSS) -->
+  <profile>
+    <id>ci</id>
+    <properties>
+      <!-- Ensure Spring profile for CI so tests don't hit real RDS -->
+      <spring.profiles.active>test</spring.profiles.active>
+    </properties>
+    <build>
+      <plugins>
+        <!-- (same four plugins as above; you can paste identical blocks or
+             keep them in the default build section and only override here) -->
+      </plugins>
+    </build>
+  </profile>
+
+  <!-- Fast local build (no tests/checks) when you just want to boot the app -->
+  <profile>
+    <id>fast</id>
+    <properties>
+      <maven.test.skip>true</maven.test.skip>
+    </properties>
+  </profile>
+</profiles>
+</project>

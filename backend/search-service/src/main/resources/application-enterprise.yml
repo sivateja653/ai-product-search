@@ -1,0 +1,41 @@
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    client-id: search-service
+    consumer:
+      group-id: search-service-embedding
+      auto-offset-reset: latest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      acks: all
+      retries: 10
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    listener:
+      auto-startup: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwt-set-uri : ${JWK_SET_URI}
+          issuer-uri: ${JWT_ISSUER}
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,prometheus,loggers, metrics, mappings
+
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+embedding:
+  topic: embedding-tasks
+  dlt: embedding-tasks-dlt

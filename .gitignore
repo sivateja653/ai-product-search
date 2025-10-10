@@ -1,0 +1,33 @@
+# Maven & build
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.log
+
+# IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Temp
+*.tmp
+*.bak
+*.swp
+
+# Frontend (future)
+node_modules/
+dist/
+build/
+
+# Secrets (keep out of git)
+.env
+*.env
+# Terraform
+**/.terraform/
+!.terraform.lock.hcl

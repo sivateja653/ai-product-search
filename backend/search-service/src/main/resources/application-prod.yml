@@ -1,0 +1,70 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}?sslmode=require&loginTimeout=10&connectTimeout=10&socketTimeout=30
+    username: ${DB_USER}
+    password: ${DB_PASS}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 20000
+      pool-name: search-hikari
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  security:
+    user:
+      name: ${ADMIN_USER:admin}
+      password: ${ADMIN_PASS:admin123}
+      roles: ADMIN
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+ai:
+  provider: openai
+  openai:
+    base-url: https://api.openai.com/v1
+    model: text-embedding-3-small   # 1536 dims; pick -large (3072) if you change DB dim too
+    timeout-ms: 4000                # request timeout (ms)
+    max-retries: 3                  # retry on 429/5xx/timeouts
+    retry-backoff-ms: 300           # backoff between retries (ms)
+    api-key: ${OPENAI_API_KEY}      # read from environment variable at runtime
+  embed:
+    maxConcurrency: 4
+    acquireTimeoutMs: 0
+    cacheSize: 500
+    ttlMs: 600000
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,prometheus,loggers, metrics, mappings
+  
+  endpoint:
+    health:
+      show-details: always
+
+  metrics:
+    tags:
+      application: search-service    # so you can see the DB check
+
+# 7d-2: Circuit breaker config named "embedding"
+resilience4j:
+  circuitbreaker:
+    instances:
+      embedding:
+        sliding-window-size: 20          # 7d-3: window size
+        minimum-number-of-calls: 10      # 7d-4: need N calls before evaluating
+        failure-rate-threshold: 50       # 7d-5: % failures to open the circuit
+        wait-duration-in-open-state: 30s # 7d-6: cool-down before half-open
