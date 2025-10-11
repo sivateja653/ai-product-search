@@ -26,32 +26,47 @@ jobs:
     env:
       SPRING_PROFILES_ACTIVE: test
       MAVEN_OPTS: -Xmx1g
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
-          cache: 'maven'
+          cache: maven
 
-      - name: Build & unit tests
+      # Cache the large NVD database used by OWASP Dep Check
+      - name: Cache OWASP Dependency-Check data
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: owasp-${{ runner.os }}-v1
+
+      # Single run: tests + coverage + checkstyle + spotbugs + owasp via dev-quality
+      - name: Build + Quality (dev-quality profile)
         working-directory: backend/search-service
-        run: ./mvnw -B -q -DskipITs=true clean verify
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}   # optional but recommended
+        run: |
+          ./mvnw -B -Pdev-quality -DskipITs=true \
+            -DnvdApiKey="$NVD_API_KEY" \
+            -Danalyzers.assembly.enabled=false \
+            -Danalyzers.retirejs.enabled=false \
+            -Danalyzers.node.enabled=false \
+            -Danalyzers.nugetconf.enabled=false \
+            -Danalyzers.assembly.enabled=false \
+            -Danalyzers.nuspec.enabled=false \
+            -Danalyzers.cocoapods.enabled=false \
+            -Danalyzers.swift.enabled=false \
+            -Danalyzers.rubygems.enabled=false \
+            -Danalyzers.python.enabled=false \
+            -Danalyzers.php.enabled=false \
+            clean verify
 
-      - name: SpotBugs
-        working-directory: backend/search-service
-        run: ./mvnw -B -q spotbugs:check
-
-      - name: Checkstyle
-        working-directory: backend/search-service
-        run: ./mvnw -B -q checkstyle:check
-
-      - name: Dependency Vulnerability Scan (OWASP)
-        if: ${{ github.event_name == 'push' }}
-        working-directory: backend/search-service
-        run: ./mvnw -B org.owasp:dependency-check-maven:check -Dformat=HTML -DfailBuildOnCVSS=7.0
-
+      # Upload key reports for quick inspection
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -59,6 +74,7 @@ jobs:
           name: backend-reports
           path: |
             backend/search-service/target/surefire-reports/**
+            backend/search-service/target/site/jacoco/index.html
             backend/search-service/target/site/checkstyle.html
             backend/search-service/target/spotbugsXml.xml
             backend/search-service/target/dependency-check-report.html

@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<reactor.netty.version>1.1.22</reactor.netty.version>
 	</properties>
 	<dependencyManagement>
   <dependencies>
@@ -40,6 +41,13 @@
       <groupId>org.flywaydb</groupId>
       <artifactId>flyway-database-postgresql</artifactId>
       <version>10.17.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-bom</artifactId>
+      <version>4.1.126.Final</version> <!-- use the latest patched 4.1.x -->
+      <type>pom</type>
+      <scope>import</scope>
     </dependency>
   </dependencies>
 </dependencyManagement>
@@ -57,6 +65,16 @@
 		  <artifactId>commons-csv</artifactId>
 		  <version>1.11.0</version>
 		</dependency>
+		<dependency>
+	      <groupId>io.projectreactor.netty</groupId>
+	      <artifactId>reactor-netty</artifactId>
+	      <version>${reactor.netty.version}</version>
+	    </dependency>
+	    <dependency>
+	      <groupId>io.projectreactor.netty</groupId>
+	      <artifactId>reactor-netty-http</artifactId>
+	      <version>${reactor.netty.version}</version>
+	    </dependency>
 		<dependency>
 		  <groupId>com.h2database</groupId>
 		  <artifactId>h2</artifactId>
@@ -268,6 +286,17 @@
   <!-- Local dev profile: run tests + coverage + style + bugs + owasp -->
   <profile>
     <id>dev-quality</id>
+    <properties>
+      <!-- make Spring Boot tests use application-test.yml -->
+      <spring.profiles.active>test</spring.profiles.active>
+
+      <!-- versions -->
+      <checkstyle.version>3.6.0</checkstyle.version>
+      <spotbugs.plugin.version>4.8.6.2</spotbugs.plugin.version>
+      <spotbugs.annotations.version>4.8.6</spotbugs.annotations.version>
+      <owasp.plugin.version>9.2.0</owasp.plugin.version>
+      <jacoco.plugin.version>0.8.12</jacoco.plugin.version>
+    </properties>
     <build>
       <plugins>
         <!-- JaCoCo -->
@@ -298,16 +327,25 @@
         <plugin>
           <groupId>org.owasp</groupId>
           <artifactId>dependency-check-maven</artifactId>
-          <version>10.0.4</version>
+          <version>12.1.6</version>
           <executions>
             <execution><goals><goal>check</goal></goals></execution>
           </executions>
           <configuration>
+          <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
             <failBuildOnCVSS>7.0</failBuildOnCVSS>
           </configuration>
         </plugin>
       </plugins>
     </build>
+       <dependencies>
+      <dependency>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-annotations</artifactId>
+        <version>${spotbugs.annotations.version}</version>
+        <scope>provided</scope>
+      </dependency>
+    </dependencies>
   </profile>
 
   <!-- CI profile: identical checks, but you can tweak (e.g., stricter CVSS) -->
