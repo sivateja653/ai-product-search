@@ -65,6 +65,10 @@ jobs:
             -Danalyzers.python.enabled=false \
             -Danalyzers.php.enabled=false \
             clean verify
+      # Generate Checkstyle HTML report (in addition to XML)
+      - name: Generate Checkstyle HTML report
+        working-directory: backend/search-service
+        run: ./mvnw -B checkstyle:checkstyle
 
       # Upload key reports for quick inspection
       - name: Upload reports
