@@ -70,6 +70,17 @@ jobs:
         working-directory: backend/search-service
         run: ./mvnw -B -Pdev-quality -DskipITs=true site
 
+      - name: SonarCloud Scan
+        working-directory: backend/search-service
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          ./mvnw -B -Pdev-quality clean verify sonar:sonar \
+            -Dsonar.projectKey=search-service \
+            -Dsonar.organization=siva-teja-singam-setty \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=$SONAR_TOKEN
+
       # Upload key reports for quick inspection
       - name: Upload reports
         if: always()
