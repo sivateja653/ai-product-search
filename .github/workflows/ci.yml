@@ -76,7 +76,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           ./mvnw -B -Pdev-quality clean verify sonar:sonar \
-            -Dsonar.projectKey=search-service \
+            -Dsonar.projectKey=com.aiproductsearch:search-service \
             -Dsonar.organization=siva-teja-singam-setty \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=$SONAR_TOKEN
