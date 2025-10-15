@@ -55,7 +55,7 @@ public class ProductController {
   }
 
   @GetMapping("/search")
-  public SearchResponse search(
+  public SearchResponse<ProductHit> search(
       @RequestParam("q") String query,
       @RequestParam(value = "page", required = false) Integer page,
       @RequestParam(value = "size", required = false) Integer size,
@@ -74,7 +74,7 @@ public class ProductController {
   }
 
   @GetMapping("/search/hybrid")
-  public SearchResponse hybrid(
+  public SearchResponse<ProductHit> hybrid(
       @RequestParam("q") String q,
       @RequestParam(value = "page", required = false) Integer page,
       @RequestParam(value = "size", required = false) Integer size,

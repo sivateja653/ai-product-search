@@ -14,7 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableMethodSecurity
-@Profile("enterprise")
+@Profile({"prod", "enterprise"})
 public class EnterpriseSecurityConfig {
 
   @Bean

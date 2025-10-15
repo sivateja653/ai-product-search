@@ -19,8 +19,8 @@ public class ProdSecurityConfig {
             auth ->
                 auth.requestMatchers("actuator/health")
                     .permitAll()
-                    .requestMatchers("/actuator/**")
-                    .hasRole("ADMIN")
+                    // .requestMatchers("/actuator/**")
+                    // .hasRole("ADMIN")
                     .requestMatchers("/api/admin/**")
                     .hasRole("ADMIN")
                     .requestMatchers("/api/products/**")

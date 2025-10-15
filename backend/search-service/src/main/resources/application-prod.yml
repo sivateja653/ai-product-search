@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}?sslmode=require&loginTimeout=10&connectTimeout=10&socketTimeout=30
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME} #?sslmode=require&loginTimeout=10&connectTimeout=10&socketTimeout=30
     username: ${DB_USER}
     password: ${DB_PASS}
     hikari:
@@ -53,11 +53,19 @@ management:
   
   endpoint:
     health:
+      show-components: always
       show-details: always
-
+      probes:
+        enabled: true
+      cache:
+        time-to-live: 0
+      
   metrics:
     tags:
       application: search-service    # so you can see the DB check
+
+server:
+  forward-headers-strategy: framework
 
 # 7d-2: Circuit breaker config named "embedding"
 resilience4j:

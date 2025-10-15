@@ -7,11 +7,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-@Primary // prefer this bean when 'prod' profile is active
+// prefer this bean when 'prod' profile is active
 @Service
 @Profile("prod")
 public final class RateLimitedEmbeddingService implements EmbeddingService {

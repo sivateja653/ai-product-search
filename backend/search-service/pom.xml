@@ -28,7 +28,6 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
-		<reactor.netty.version>1.1.22</reactor.netty.version>
 	</properties>
 	<dependencyManagement>
   <dependencies>
@@ -45,7 +44,7 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-bom</artifactId>
-      <version>4.1.126.Final</version> <!-- use the latest patched 4.1.x -->
+      <version>4.1.126.Final</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -57,6 +56,10 @@
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 		<dependency>
+  <groupId>io.micrometer</groupId>
+  <artifactId>micrometer-registry-prometheus</artifactId>
+</dependency>
+		<dependency>
 		  <groupId>org.apache.commons</groupId>
 		  <artifactId>commons-csv</artifactId>
 		  <version>1.11.0</version>
@@ -64,12 +67,10 @@
 		<dependency>
 	      <groupId>io.projectreactor.netty</groupId>
 	      <artifactId>reactor-netty</artifactId>
-	      <version>${reactor.netty.version}</version>
 	    </dependency>
 	    <dependency>
 	      <groupId>io.projectreactor.netty</groupId>
 	      <artifactId>reactor-netty-http</artifactId>
-	      <version>${reactor.netty.version}</version>
 	    </dependency>
 		<dependency>
 		  <groupId>com.h2database</groupId>

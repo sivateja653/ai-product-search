@@ -32,9 +32,12 @@ management:
 
   endpoint:
     health:
-      show-details: never
+      show-components: always
+      show-details: always
       probes:
         enabled: true
+      cache:
+        time-to-live: 0 
 
 embedding:
   topic: embedding-tasks
