@@ -5,7 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'backend/search-service/**'
-      - '.github/workflows/ci.yml'
+      - '.github/workflows/**'
   pull_request:
     branches: [ main ]
     paths:
