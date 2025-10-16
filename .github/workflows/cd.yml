@@ -20,8 +20,8 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: search-searvice
-  CONTAINER_NAME: search-searvice
+  ECR_REPOSITORY: search-service
+  CONTAINER_NAME: search-service
   SERVICE_PATH: backend/search-service
 
 jobs:
@@ -49,32 +49,31 @@ jobs:
         id: meta
         shell: bash
         run: |
-          if [ -n "${{ github.event.inputs.image_tag }}"]; then
-            echo "TAG=${{ github.event.inputs.image_tag }}" >> $GITHUB_OUTPUT
+          if [[ -n "${{ github.event.inputs.image_tag }}" ]]; then
+            echo "Using provided image tag: ${{ github.event.inputs.image_tag }}"
+            echo "TAG=${{ github.event.inputs.image_tag }}" >> "$GITHUB_OUTPUT"
           else
-            TAG="${GITHUB_SHA::7}"
+            SHORT_SHA="${GITHUB_SHA::7}"
+            echo "Using commit SHA as image tag: $SHORT_SHA"
+            echo "TAG=$SHORT_SHA" >> "$GITHUB_OUTPUT"
           fi
-          echo "TAG=$TAG"
-          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
-
       - name: Build Docker image
         working-directory: ${{ env.SERVICE_PATH }}
         run: |
-          docker build -t $CONTAINER_NAME:${{ steps.meta.outputs.TAG }} .
-
+          docker build -t ${{ env.CONTAINER_NAME }}:${{ steps.meta.outputs.TAG }} .
       - name: Tag & Push Docker image to ECR
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           ECR_URI="${ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}"
-          docker tag ${{env.ECR_REPOSITORY}}:${{ steps.meta.outputs.TAG }} $ECR_URI:${{ steps.meta.outputs.TAG }}
-          docker push $ECR_URI:${{ steps.meta.outputs.TAG }}
+          docker tag ${{env.ECR_REPOSITORY}}:${{ steps.meta.outputs.TAG }} ${ECR_URI}:${{ steps.meta.outputs.TAG }}
+          docker push ${ECR_URI}:${{ steps.meta.outputs.TAG }}
           echo "ECR_URI=${ECR_URI}" >> $GITHUB_OUTPUT
-
+          echo "ECR_URI=${ECR_URI}" >> $GITHUB_ENV
       - name: Render task definition
         id: render
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ${{ env.SERVICE_PATH }}/infra/ecs-task/taskdef-template.json
+          task-definition: infra/ecs-task/taskdef-template.json
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ env.ECR_URI }}:${{ steps.meta.outputs.TAG }}
 
