@@ -1,0 +1,83 @@
+name: CD
+
+on:
+  workflow_run:
+    worksflows: ["CI"]
+    branches: [main]
+    types: [completed]
+
+  workflows_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy (default: commit SHA)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: search-searvice
+  CONTAINER_NAME: search-searvice
+  SERVICE_PATH: backend/search-service
+
+jobs:
+  deploy:
+    name: Build -> Push ECR -> Deploy to ECS
+    if: >
+      github.event_name == 'workflows_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (static)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          if [ -n "${{ github.event.inputs.image_tag }}"]; then
+            echo "TAG=${{ github.event.inputs.image_tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=${{ GITHUB_SHA::7 }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build Docker image
+        working-directory: ${{ env.SERVICE_PATH }}
+        run: |
+          docker build -t $CONTAINER_NAME:${{ steps.meta.outputs.TAG }} .
+
+      - name: Tag & Push Docker image to ECR
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          ECR_URI="${ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}"
+          docker tag ${{env.ECR_REPOSITORY}}:${{ steps.meta.outputs.TAG }} $ECR_URI:${{ steps.meta.outputs.TAG }}
+          docker push $ECR_URI:${{ steps.meta.outputs.TAG }}
+          echo "ECR_URI=${ECR_URI}" >> $GITHUB_OUTPUT
+
+      - name: Render task definition
+        id: render
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.SERVICE_PATH }}/infra/ecs-task/taskdef-template.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ env.ECR_URI }}:${{ steps.meta.outputs.TAG }}
+
+      - name: Deploy to Amazon ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          service: ${{ secrets.ECS_SERVICE }}
+          cluster: ${{ secrets.ECS_CLUSTER }}
+          wait-for-service-stability: true
