@@ -10,7 +10,7 @@ on:
     branches: [ main ]
     paths:
       - 'backend/search-service/**'
-      - '.github/workflows/ci.yml'
+      - '.github/workflows/**'
 
 permissions:
   contents: read
