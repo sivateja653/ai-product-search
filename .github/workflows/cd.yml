@@ -46,12 +46,15 @@ jobs:
 
       - name: Compute image tag
         id: meta
+        shell: bash
         run: |
           if [ -n "${{ github.event.inputs.image_tag }}"]; then
             echo "TAG=${{ github.event.inputs.image_tag }}" >> $GITHUB_OUTPUT
           else
-            echo "TAG=${{ GITHUB_SHA::7 }}" >> $GITHUB_OUTPUT
+            TAG="${GITHUB_SHA::7}"
           fi
+          echo "TAG=$TAG"
+          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Build Docker image
         working-directory: ${{ env.SERVICE_PATH }}
