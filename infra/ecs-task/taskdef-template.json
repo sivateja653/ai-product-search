@@ -27,14 +27,14 @@
                 { "name": "LOGGING_LEVEL_ORG_SPRINGFRAMEWORK", "value": "INFO"}
             ],
             "secrets": [
-                { "name": "DB_HOST", "valueFrom": "arn:aws:secretsmanager:us-east-1:068571370361:secret:search-service-prod-W4wqgN:DB_HOST::" },
-                { "name": "DB_NAME", "valueFrom": "arn:aws:secretsmanager:us-east-1:068571370361:secret:search-service-prod-W4wqgN:DB_NAME::" },
-                { "name": "DB_PASS", "valueFrom": "arn:aws:secretsmanager:us-east-1:068571370361:secret:search-service-prod-W4wqgN:DB_PASS::" },
-                { "name": "DB_PORT", "valueFrom": "arn:aws:secretsmanager:us-east-1:068571370361:secret:search-service-prod-W4wqgN:DB_PORT::" },
-                { "name": "DB_USER", "valueFrom": "arn:aws:secretsmanager:us-east-1:068571370361:secret:search-service-prod-W4wqgN:DB_USER::" },
-                { "name": "JWK_SET_URI", "valueFrom": "arn:aws:secretsmanager:us-east-1:068571370361:secret:search-service-prod-W4wqgN:JWK_SET_URI::" },
-                { "name": "JWT_ISSUER", "valueFrom": "arn:aws:secretsmanager:us-east-1:068571370361:secret:search-service-prod-W4wqgN:JWT_ISSUER::" },
-                { "name": "OPENAI_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:068571370361:secret:search-service-prod-W4wqgN:OPENAI_API_KEY::" }
+                { "name": "DB_HOST", "valueFrom": "arn:aws:ssm:us-east-1:068571370361:parameter/DB_HOST" },
+                { "name": "DB_NAME", "valueFrom": "arn:aws:ssm:us-east-1:068571370361:parameter/DB_NAME" },
+                { "name": "DB_PASS", "valueFrom": "arn:aws:secretsmanager:us-east-1:068571370361:secret:search-service-prod-updated-eqol3n:DB_PASS::" },
+                { "name": "DB_PORT", "valueFrom": "arn:aws:ssm:us-east-1:068571370361:parameter/DB_PORT" },
+                { "name": "DB_USER", "valueFrom": "arn:aws:ssm:us-east-1:068571370361:parameter/DB_USER" },
+                { "name": "JWK_SET_URI", "valueFrom": "arn:aws:ssm:us-east-1:068571370361:parameter/JWK_SET_URI" },
+                { "name": "JWT_ISSUER", "valueFrom": "arn:aws:ssm:us-east-1:068571370361:parameter/JWT_ISSUER" },
+                { "name": "OPENAI_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:068571370361:secret:search-service-prod-updated-eqol3n:OPENAI_API_KEY::" }
             ],
             "logConfiguration": {
                 "logDriver": "awslogs",

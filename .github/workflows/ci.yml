@@ -5,11 +5,13 @@ on:
     branches: [ main ]
     paths:
       - 'backend/search-service/**'
+      - 'infra/ecs-task/**'
       - '.github/workflows/**'
   pull_request:
     branches: [ main ]
     paths:
       - 'backend/search-service/**'
+      - 'infra/ecs-task/**'
       - '.github/workflows/**'
 
 permissions:
