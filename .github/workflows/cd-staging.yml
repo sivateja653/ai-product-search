@@ -76,8 +76,7 @@ jobs:
         id: render
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          # FIX PATH if your file lives under backend/search-service/...
-          task-definition: ${{ env.SERVICE_PATH }}/infra/ecs-task/taskdef-staging-template.json
+          task-definition: infra/ecs-task/taskdef-staging-template.json
           container-name:  ${{ env.CONTAINER_NAME }}
           image:           ${{ env.ECR_URI }}:${{ steps.meta.outputs.TAG }}
 
