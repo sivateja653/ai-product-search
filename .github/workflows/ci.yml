@@ -101,7 +101,7 @@ jobs:
         id: pushimg
         working-directory: ${{ env.SERVICE_PATH }}
         run: |
-          ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           TAG="${GITHUB_SHA::7}"
           ECR_URI="${ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}"
           docker build -t "$ECR_URI:$TAG" .
