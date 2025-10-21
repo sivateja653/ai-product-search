@@ -1,12 +1,7 @@
-name: CD
+name: CD (prod)
 
 on:
   workflow_dispatch:
-      inputs:
-        image_tag:
-          description: 'Image tag to deploy (default: commit SHA)'
-          required: false
-          default: ''
 
   workflow_run:
     workflows: ["CI"]
@@ -25,8 +20,9 @@ env:
   SERVICE_PATH: backend/search-service
 
 jobs:
-  deploy:
-    name: Build -> Push ECR -> Deploy to ECS
+  deploy-prod:
+    name: Deploy to ECS
+    environment: production
     if: >
       github.event_name == 'workflows_dispatch' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
@@ -49,27 +45,15 @@ jobs:
         id: meta
         shell: bash
         run: |
-          if [[ -n "${{ github.event.inputs.image_tag }}" ]]; then
-            echo "Using provided image tag: ${{ github.event.inputs.image_tag }}"
-            echo "TAG=${{ github.event.inputs.image_tag }}" >> "$GITHUB_OUTPUT"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_run" ]]; then
+            SHA="${{ github.event.workflow_run.head_sha }}"
           else
-            SHORT_SHA="${GITHUB_SHA::7}"
-            echo "Using commit SHA as image tag: $SHORT_SHA"
-            echo "TAG=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+            SHA="${GITHUB_SHA}"
           fi
-      - name: Build Docker image
-        working-directory: ${{ env.SERVICE_PATH }}
-        run: |
-          docker build -t ${{ env.CONTAINER_NAME }}:${{ steps.meta.outputs.TAG }} .
-      - name: Tag & Push Docker image to ECR
-        run: |
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          ECR_URI="${ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}"
-          docker tag ${{env.ECR_REPOSITORY}}:${{ steps.meta.outputs.TAG }} ${ECR_URI}:${{ steps.meta.outputs.TAG }}
-          docker push ${ECR_URI}:${{ steps.meta.outputs.TAG }}
-          echo "ECR_URI=${ECR_URI}" >> $GITHUB_OUTPUT
-          echo "ECR_URI=${ECR_URI}" >> $GITHUB_ENV
-      - name: Render task definition
+          echo "TAG=${SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "Using image tag: ${SHA::7}"
+
+      - name: Render task definition (prod)
         id: render
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
@@ -77,10 +61,16 @@ jobs:
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ env.ECR_URI }}:${{ steps.meta.outputs.TAG }}
 
-      - name: Deploy to Amazon ECS
+      - name: Deploy to Amazon ECS (prod)
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.render.outputs.task-definition }}
           service: ${{ secrets.ECS_SERVICE }}
           cluster: ${{ secrets.ECS_CLUSTER }}
           wait-for-service-stability: true
+
+      - name: Post-deploy smoke (prod)
+        run: |
+          set -e
+          curl -fsSL https://api.eazysearch.shop/actuator/health >/dev/null
+          curl -fsSL "https://api.eazysearch.shop/api/products/search?q=phone&page=0&size=1" 

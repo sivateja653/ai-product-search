@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, staging ]
     paths:
       - 'backend/search-service/**'
       - 'infra/ecs-task/**'
@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -26,6 +27,9 @@ jobs:
     name: Build & Quality (backend/search-service)
     runs-on: ubuntu-latest
     env:
+      AWS_REGION: us-east-1
+      ECR_REPOSITORY: search-service
+      SERVICE_PATH: backend/search-service
       SPRING_PROFILES_ACTIVE: test
       MAVEN_OPTS: -Xmx1g
 
@@ -83,6 +87,28 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=$SONAR_TOKEN
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & Push Docker image
+        id: pushimg
+        working-directory: ${{ env.SERVICE_PATH }}
+        run: |
+          ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
+          TAG="${GITHUB_SHA::7}"
+          ECR_URI="${ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}"
+          docker build -t "$ECR_URI:$TAG" .
+          docker push "$ECR_URI:$TAG"
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+          echo "ECR_URI=$ECR_URI" >> $GITHUB_OUTPUT
+
       # Upload key reports for quick inspection
       - name: Upload reports
         if: always()
@@ -96,3 +122,4 @@ jobs:
             backend/search-service/target/spotbugsXml.xml
             backend/search-service/target/dependency-check-report.html
           if-no-files-found: ignore
+
