@@ -1,0 +1,20 @@
+{
+  "Budget": {
+    "BudgetName": "search-service-monthly",
+    "BudgetLimit": { "Amount": "50", "Unit": "USD" },
+    "TimeUnit": "MONTHLY",
+    "BudgetType": "COST"
+  },
+  "NotificationsWithSubscribers": [{
+    "Notification": {
+      "NotificationType": "FORECASTED",
+      "ComparisonOperator": "GREATER_THAN",
+      "Threshold": 80.0,
+      "ThresholdType": "PERCENTAGE"
+    },
+    "Subscribers": [{
+      "SubscriptionType": "EMAIL",
+      "Address": "you@example.com"
+    }]
+  }]
+}
