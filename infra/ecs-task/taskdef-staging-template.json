@@ -1,0 +1,51 @@
+{
+  "family": "search-service-staging",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::068571370361:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::068571370361:role/search-service-task-role",
+  "containerDefinitions": [
+    {
+      "name": "search-service",
+      "image": "REPLACED_BY_CI",
+      "essential": true,
+      "portMappings": [
+        { "containerPort": 8080, "hostPort": 8080, "protocol": "tcp" }
+      ],
+      "environment": [
+        { "name": "SPRING_PROFILES_ACTIVE", "value": "prod,enterprise" },
+        { "name": "SERVER_PORT", "value": "8080" },
+        { "name": "SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE", "value": "10"},
+        { "name": "SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE", "value": "5"},
+        { "name": "LOGGING_LEVEL_COM_AIPRODUCTSEARCH", "value": "INFO" }
+      ],
+      "secrets": [
+        { "name": "DB_HOST", "valueFrom": "arn:aws:ssm:us-east-1:068571370361:parameter/DB_HOST" },
+                { "name": "DB_NAME", "valueFrom": "arn:aws:ssm:us-east-1:068571370361:parameter/DB_NAME" },
+                { "name": "DB_PASS", "valueFrom": "arn:aws:secretsmanager:us-east-1:068571370361:secret:search-service-staging-bXcxIM:DB_PASS::" },
+                { "name": "DB_PORT", "valueFrom": "arn:aws:ssm:us-east-1:068571370361:parameter/DB_PORT" },
+                { "name": "DB_USER", "valueFrom": "arn:aws:ssm:us-east-1:068571370361:parameter/DB_USER" },
+                { "name": "JWK_SET_URI", "valueFrom": "arn:aws:ssm:us-east-1:068571370361:parameter/JWK_SET_URI" },
+                { "name": "JWT_ISSUER", "valueFrom": "arn:aws:ssm:us-east-1:068571370361:parameter/JWT_ISSUER" },
+                { "name": "OPENAI_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:068571370361:secret:search-service-staging-bXcxIM:OPENAI_API_KEY::" }
+        ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "us-east-1",
+          "awslogs-group": "/ecs/search-service-staging",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 5,
+        "startPeriod": 120
+      }
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+name: CD (staging)
+
+on:
+  workflow_dispatch:
+
+  workflow_run:
+    workflows: ["CI"]
+    branches: [ staging ]
+    types: [ completed ]
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: search-service
+  CONTAINER_NAME: search-service
+  SERVICE_PATH: backend/search-service
+
+jobs:
+  deploy-staging:
+    environment: staging
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflows_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Determine image tag (sha7)
+        id: meta
+        run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Render task definition (staging)
+        id: render
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: infra/ecs-task/taskdef-staging-template.json
+          container-name:  ${{ env.CONTAINER_NAME }}
+          image:           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ steps.meta.outputs.TAG }}
+
+      - name: Deploy to ECS (staging)
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          service:         search-service-staging
+          cluster:         ${{ secrets.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      - name: Post-deploy smoke (staging)
+        run: |
+          set -e
+          curl -fsSL https://staging-api.eazysearch.shop/actuator/health >/dev/null
+          curl -fsSL "https://staging-api.eazysearch.shop/api/products/search?q=phone&page=0&size=1" | jq 'has("items")'

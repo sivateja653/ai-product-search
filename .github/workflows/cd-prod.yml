@@ -1,0 +1,76 @@
+name: CD (prod)
+
+on:
+  workflow_dispatch:
+
+  workflow_run:
+    workflows: ["CI"]
+    branches: [ main ]
+    types: [ completed ]
+
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: search-service
+  CONTAINER_NAME: search-service
+  SERVICE_PATH: backend/search-service
+
+jobs:
+  deploy-prod:
+    name: Deploy to ECS
+    environment: production
+    if: >
+      github.event_name == 'workflows_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (static)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Compute image tag
+        id: meta
+        shell: bash
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_run" ]]; then
+            SHA="${{ github.event.workflow_run.head_sha }}"
+          else
+            SHA="${GITHUB_SHA}"
+          fi
+          echo "TAG=${SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "Using image tag: ${SHA::7}"
+
+      - name: Render task definition (prod)
+        id: render
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: infra/ecs-task/taskdef-template.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ env.ECR_URI }}:${{ steps.meta.outputs.TAG }}
+
+      - name: Deploy to Amazon ECS (prod)
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          service: ${{ secrets.ECS_SERVICE }}
+          cluster: ${{ secrets.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      - name: Post-deploy smoke (prod)
+        run: |
+          set -e
+          curl -fsSL https://api.eazysearch.shop/actuator/health >/dev/null
+          curl -fsSL "https://api.eazysearch.shop/api/products/search?q=phone&page=0&size=1" 
