@@ -38,7 +38,23 @@ jobs:
 
       - name: Determine image tag (sha7)
         id: meta
-        run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+        shell: bash
+        run: |
+          # Tag must come from the CI run that triggered this workflow
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_run" ]]; then
+            SHA="${{ github.event.workflow_run.head_sha }}"
+          else
+            SHA="${GITHUB_SHA}"
+          fi
+          TAG="${SHA::7}"
+
+          ACCOUNT="${{ steps.aws_creds.outputs.aws-account-id }}"
+          REGION="us-east-1"
+          REPO="search-service"
+          ECR_URI="${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/${REPO}"
+
+          echo "TAG=$TAG"         >> "$GITHUB_OUTPUT"
+          echo "ECR_URI=$ECR_URI" >> "$GITHUB_OUTPUT"
 
       - name: Render task definition (staging)
         id: render
@@ -46,7 +62,7 @@ jobs:
         with:
           task-definition: infra/ecs-task/taskdef-staging-template.json
           container-name:  ${{ env.CONTAINER_NAME }}
-          image:           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ steps.meta.outputs.TAG }}
+          image: ${{ steps.meta.outputs.ECR_URI }}:${{ steps.meta.outputs.TAG }}
 
       - name: Deploy to ECS (staging)
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
