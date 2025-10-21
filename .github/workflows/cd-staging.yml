@@ -41,11 +41,13 @@ jobs:
         id: meta
         shell: bash
         run: |
-          # Tag must come from the CI run that triggered this workflow
-          if [[ "${GITHUB_EVENT_NAME}" == "workflow_run" ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
             SHA="${{ github.event.workflow_run.head_sha }}"
+            echo "Triggered by CI workflow run. Using commit SHA: $SHA"
           else
-            SHA="${GITHUB_SHA}"
+            # Fallback for manual workflow_dispatch runs
+            SHA="${{ github.sha }}"
+            echo "Triggered manually. Using commit SHA: $SHA"
           fi
           TAG="${SHA::7}"
 
@@ -55,7 +57,8 @@ jobs:
           ECR_URI="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${REPO}"
 
           echo "TAG=$TAG"         >> "$GITHUB_OUTPUT"
-          echo "ECR_URI=$ECR_URI" >> "$GITHUB_OUTPUT"
+          echo "ECR_URI=${ECR_URI}" >> $GITHUB_OUTPUT
+          echo "ECR_URI=${ECR_URI}" >> $GITHUB_ENV
 
       - name: Render task definition (staging)
         id: render
@@ -63,7 +66,7 @@ jobs:
         with:
           task-definition: infra/ecs-task/taskdef-staging-template.json
           container-name:  ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.meta.outputs.ECR_URI }}:${{ steps.meta.outputs.TAG }}
+          image: ${{ env.ECR_URI }}:${{ steps.meta.outputs.TAG }}
 
       - name: Deploy to ECS (staging)
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2

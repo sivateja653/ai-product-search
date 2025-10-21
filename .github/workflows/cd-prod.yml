@@ -60,7 +60,8 @@ jobs:
           ECR_URI="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${REPO}"
 
           echo "TAG=$TAG"         >> "$GITHUB_OUTPUT"
-          echo "ECR_URI=$ECR_URI" >> "$GITHUB_OUTPUT"
+          echo "ECR_URI=${ECR_URI}" >> $GITHUB_OUTPUT
+          echo "ECR_URI=${ECR_URI}" >> $GITHUB_ENV
 
       - name: Render task definition (prod)
         id: render
@@ -68,7 +69,7 @@ jobs:
         with:
           task-definition: infra/ecs-task/taskdef-template.json
           container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.meta.outputs.ECR_URI }}:${{ steps.meta.outputs.TAG }}
+          image: ${{ env.ECR_URI }}:${{ steps.meta.outputs.TAG }}
 
       - name: Deploy to Amazon ECS (prod)
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
