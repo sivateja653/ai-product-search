@@ -49,10 +49,10 @@ jobs:
           fi
           TAG="${SHA::7}"
 
-          ACCOUNT="${{ steps.aws_creds.outputs.aws-account-id }}"
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           REGION="us-east-1"
           REPO="search-service"
-          ECR_URI="${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/${REPO}"
+          ECR_URI="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${REPO}"
 
           echo "TAG=$TAG"         >> "$GITHUB_OUTPUT"
           echo "ECR_URI=$ECR_URI" >> "$GITHUB_OUTPUT"
