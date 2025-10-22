@@ -2,10 +2,9 @@ name: CD (staging)
 
 on:
   workflow_dispatch:
-
   workflow_run:
-    workflows: ["CI"]
-    branches: [ staging ]
+    workflows: ["CI"]          # must exactly match CI's 'name'
+    branches: [ staging ]      # CI run branch
     types: [ completed ]
 
 permissions:
@@ -20,15 +19,24 @@ env:
 
 jobs:
   deploy-staging:
+    name: Deploy to ECS Staging
     environment: staging
     runs-on: ubuntu-latest
+    # FIXED: workflow_dispatch (not workflows_dispatch)
     if: >
-      github.event_name == 'workflows_dispatch' ||
+      github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+
+    concurrency:
+      group: cd-staging-${{ github.run_id }}
+      cancel-in-progress: true
+
     steps:
       - uses: actions/checkout@v4
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - name: Configure AWS credentials
+        id: aws_creds
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -36,9 +44,33 @@ jobs:
 
       - uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Determine image tag (sha7)
+      - name: Determine image tag (sha7) from CI run
         id: meta
-        run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            BR="${{ github.event.workflow_run.head_branch }}"
+            SHA="${{ github.event.workflow_run.head_sha }}"
+            if [[ "$BR" != "staging" ]]; then
+              echo "This run came from '$BR', not 'staging' — aborting."
+              exit 1
+            fi
+            echo "Triggered by CI on branch=$BR sha=$SHA"
+          else
+            # Manual dispatch fallback: uses current ref SHA (select 'staging' in UI)
+            SHA="${{ github.sha }}"
+            echo "Manual dispatch. Using SHA=$SHA"
+          fi
+          TAG="${SHA::7}"
+
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          REGION="${{ env.AWS_REGION }}"
+          REPO="${{ env.ECR_REPOSITORY }}"
+          ECR_URI="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${REPO}"
+
+          echo "TAG=$TAG"       >> "$GITHUB_OUTPUT"
+          echo "ECR_URI=$ECR_URI" >> "$GITHUB_OUTPUT"
+          echo "ECR_URI=$ECR_URI" >> "$GITHUB_ENV"
 
       - name: Render task definition (staging)
         id: render
@@ -46,7 +78,7 @@ jobs:
         with:
           task-definition: infra/ecs-task/taskdef-staging-template.json
           container-name:  ${{ env.CONTAINER_NAME }}
-          image:           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ steps.meta.outputs.TAG }}
+          image:           ${{ env.ECR_URI }}:${{ steps.meta.outputs.TAG }}
 
       - name: Deploy to ECS (staging)
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
