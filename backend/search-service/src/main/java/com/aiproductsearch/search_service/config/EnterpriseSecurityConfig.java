@@ -21,6 +21,7 @@ public class EnterpriseSecurityConfig {
   SecurityFilterChain enterpriseFilterChain(HttpSecurity http, JwtAuthenticationConverter conv)
       throws Exception {
     http.csrf(csrf -> csrf.disable())
+        .cors(cors -> {})
         .authorizeHttpRequests(
             auth ->
                 auth.requestMatchers("/actuator/health", "/actuator/health/**")
